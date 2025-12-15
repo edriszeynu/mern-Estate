@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   updateUserStart,
@@ -8,9 +8,13 @@ import {
 
 const Profile = () => {
   const dispatch = useDispatch();
-  const { currentUser } = useSelector((state) => state.user);
-  const [formData, setFormData] = useState({});
-  const fileRef = useRef(null);
+  const { currentUser, loading, error } = useSelector((state) => state.user);
+  const [formData, setFormData] = useState({
+    username: currentUser.username,
+    email: currentUser.email,
+    password: '',
+  });
+  const [updateSuccess, setUpdateSuccess] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -21,23 +25,22 @@ const Profile = () => {
     try {
       dispatch(updateUserStart());
 
-      const res = await fetch(`/api/user/update/${currentUser._id}`, {
+      const res = await fetch(`http://localhost:3000/api/user/update/${currentUser._id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include', // ✅ important for cookies
         body: JSON.stringify(formData),
       });
 
       const data = await res.json();
 
-      if (data.success === false) {
-        dispatch(updateUserFailure(data.message));
+      if (!data.success) {
+        dispatch(updateUserFailure(data.message || 'Update failed'));
         return;
       }
 
       dispatch(updateUserSuccess(data));
+      setUpdateSuccess(true);
     } catch (error) {
       dispatch(updateUserFailure(error.message));
     }
@@ -49,7 +52,6 @@ const Profile = () => {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <img
-          
           src={currentUser.avatar}
           alt="profile"
           className="rounded-full h-24 w-24 object-cover cursor-pointer self-center mt-2"
@@ -58,7 +60,7 @@ const Profile = () => {
         <input
           type="text"
           id="username"
-          defaultValue={currentUser.username}
+          value={formData.username}
           onChange={handleChange}
           className="border p-3 rounded-lg"
           placeholder="Username"
@@ -67,7 +69,7 @@ const Profile = () => {
         <input
           type="email"
           id="email"
-          defaultValue={currentUser.email}
+          value={formData.email}
           onChange={handleChange}
           className="border p-3 rounded-lg"
           placeholder="Email"
@@ -76,13 +78,18 @@ const Profile = () => {
         <input
           type="password"
           id="password"
+          value={formData.password}
           onChange={handleChange}
           className="border p-3 rounded-lg"
           placeholder="Password"
         />
 
-        <button type='submit' className="bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95">
-          Update Profile
+        <button
+          disabled={loading}
+          type="submit"
+          className="bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95"
+        >
+          {loading ? 'Loading ...' : 'Update'}
         </button>
       </form>
 
@@ -90,6 +97,8 @@ const Profile = () => {
         <span className="text-red-700 cursor-pointer">Delete Account</span>
         <span className="text-red-700 cursor-pointer">Sign Out</span>
       </div>
+      {error && <p className="text-red-700 mt-5">{error}</p>}
+      {updateSuccess && <p className="text-green-700 mt-5">User updated successfully</p>}
     </div>
   );
 };

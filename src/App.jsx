@@ -11,6 +11,7 @@ import PrivateRoute from './component/PrivateRoute';
 import CreateListing from './pages/CreateListing';
 import UpdateListing from './pages/UpdateListing';
 import Listing from './pages/Listing';
+import Search from './pages/Search';
 
 const App = () => {
   return (
@@ -23,6 +24,7 @@ const App = () => {
         <Route path="/sign-out" element={<SignOut />} />
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/about" element={<About />} />
+        <Route path='/search' element={<Search/>}/>
 
         {/* ✅ FIXED LISTING ROUTE */}
         <Route path="/listing/:listingId" element={<Listing />} />
